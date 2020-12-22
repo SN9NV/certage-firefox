@@ -1,6 +1,6 @@
 "use strict";
 
-const msPerDay = 3600_000 * 24;
+const msPerDay = 3600000 * 24;
 
 async function logRootCert(details) {
   if (details.documentUrl === undefined) {
