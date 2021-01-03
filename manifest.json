@@ -1,18 +1,20 @@
 {
-	"manifest_version": 2,
-	"name": "Certage",
-	"version": "1.0.0",
-	"description": "Show the remaining days/hours for the SSL certificate for any web page.",
-        "browser_action": {
-          "default_icon": {
-            "48": "icons/48_green.png"
-          }
-        },
-	"icons": {
-		"48": "icons/48_green.png"
-	},
-	"permissions": ["webRequest", "webRequestBlocking", "<all_urls>"],
-	"background": {
-		"scripts": ["background.js"]
-	}
+  "manifest_version": 2,
+  "name": "Certage",
+  "version": "1.1.0",
+  "description": "Show the remaining days/hours for the SSL certificate for any web page.",
+  "browser_action": {
+    "default_icon": {
+      "48": "icons/48_green.png"
+    },
+    "default_title": "Certage",
+    "default_popup": "popup/index.html"
+  },
+  "icons": {
+    "48": "icons/48_green.png"
+  },
+  "permissions": ["webRequest", "webRequestBlocking", "<all_urls>"],
+  "background": {
+    "scripts": ["background.js"]
+  }
 }
