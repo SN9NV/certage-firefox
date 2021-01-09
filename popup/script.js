@@ -2,6 +2,9 @@
 
 const msPerDay = 3600000 * 24;
 
+const ICON_HIDDEN = "/icons/hidden.png";
+const ICON_VISIBLE = "/icons/visible.png";
+
 async function tabId() {
   const tabs = await browser.tabs.query({ currentWindow: true, active: true });
   for (const tab of tabs) {
@@ -12,61 +15,100 @@ async function tabId() {
 }
 
 async function getCerts() {
-  const certs = await browser.runtime.sendMessage({
+  const { certs, hiddenCommonNames } = await browser.runtime.sendMessage({
     type: "getCerts",
     tabId: await tabId(),
   });
 
-  if (certs === undefined) {
-    return [];
-  }
+  return {
+    certs: Object.entries(certs)
+      .map(([_, cert]) => cert)
+      .sort((a, b) => {
+        if ((a.isEarly || a.isExpired) && !(b.isEarly || b.isExpired)) {
+          return -1;
+        }
 
-  return Object.entries(certs)
-    .map(([_, err]) => err)
-    .sort((a, b) => {
-      if ((a.isEarly || a.isExpired) && !(b.isEarly || b.isExpired)) {
-        return -1;
-      }
-      if (a.timeLeft === b.timeLeft) {
-        return b.cn.localeCompare(a.cn);
-      }
-      return a.timeLeft - b.timeLeft;
-    });
+        if (a.timeLeft === b.timeLeft) {
+          return b.cn.localeCompare(a.cn);
+        }
+
+        return a.timeLeft - b.timeLeft;
+      }),
+    hiddenCommonNames,
+  };
 }
 
-async function main() {
-  const certs = await getCerts();
+function hideButton(commonName, isHidden, className) {
+  const td = document.createElement("td");
+  td.onclick = async () => {
+    await browser.runtime.sendMessage({
+      type: isHidden ? "popHiddenCommonName" : "pushHiddenCommonNames",
+      tabId: await tabId(),
+      hiddenCommonName: commonName,
+    });
+    main();
+  };
 
-  const certsDiv = document.getElementById("certs");
+  const icon = document.createElement("img");
+  icon.setAttribute("src", isHidden ? ICON_HIDDEN : ICON_VISIBLE);
+  icon.setAttribute("title", isHidden ? "Show" : "Hide");
+  icon.setAttribute("class", className);
 
-  for (const cert of certs) {
-    const cn = document.createElement("span");
-    const note = document.createElement("span");
+  td.append(icon);
 
-    const className =
-      cert.isEarly || cert.isExpired
-        ? "error"
-        : cert.isAlmostExpired
-        ? "warning"
-        : "good";
+  return td;
+}
 
-    const cnContent = document.createTextNode(cert.cn);
-    cn.appendChild(cnContent);
-    cn.setAttribute("title", cert.cert.subject);
-    cn.setAttribute("class", className);
+function cnSpan(cert, className) {
+  const cn = document.createElement("td");
+  cn.appendChild(document.createTextNode(cert.cn));
+  cn.setAttribute("title", cert.cert.subject);
+  cn.setAttribute("class", className);
 
-    const noteContent = document.createTextNode(
+  return cn;
+}
+
+function noteSpan(cert, className) {
+  const note = document.createElement("td");
+  note.appendChild(
+    document.createTextNode(
       cert.isEarly
         ? "Early"
         : cert.isExpired
         ? "Expired"
         : `${Math.trunc(cert.timeLeft / msPerDay)} days`
-    );
-    note.appendChild(noteContent);
-    note.setAttribute("title", new Date(cert.end));
-    note.setAttribute("class", className);
+    )
+  );
+  note.setAttribute("title", new Date(cert.end));
+  note.setAttribute("class", className);
 
-    certsDiv.append(cn, note);
+  return note;
+}
+
+async function main() {
+  const { certs, hiddenCommonNames } = await getCerts();
+
+  const certsTable = document.getElementById("certs");
+  certsTable.replaceChildren();
+
+  for (const cert of certs) {
+    const row = document.createElement("tr");
+    row.setAttribute(
+      "class",
+      cert.isEarly || cert.isExpired
+        ? "error"
+        : cert.isAlmostExpired
+        ? "warning"
+        : "good"
+    );
+
+    row.append(
+      hideButton(cert.cn, hiddenCommonNames.includes(cert.cn)),
+      cnSpan(cert),
+      noteSpan(cert)
+    );
+
+    certsTable.append(row);
   }
 
   const removeDataButton = document.getElementById("removeData");

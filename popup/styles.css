@@ -1,11 +1,9 @@
-#certs {
-  display: grid;
-  grid-template-columns: auto auto;
-  color: black;
+img {
+  width: 1em;
 }
 
-#certs * {
-  padding: 0.5em;
+td {
+  padding: 0.5em 0.5em;
 }
 
 .warning {

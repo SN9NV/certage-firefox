@@ -7,10 +7,17 @@
   <script src="script.js"></script>
 </head>
 <body>
-  <div id="certs">
-    <span>Cert Name</span>
-    <span>Time Left</span>
-  </div>
+  <table cellspacing="0">
+    <thead>
+      <tr>
+        <td></td>
+        <td>Common Name</td>
+        <td>Time Left</td>
+      </tr>
+    </thead>
+    <tbody id="certs">
+    </tbody>
+  </table>
 
   <div class="button-container">
     <button id="removeData">Remove cert data for this tab</button>
