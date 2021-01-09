@@ -70,8 +70,8 @@ function updateIcon(tabId) {
         return;
       }
 
-      isEarly ||= cert.isEarly;
-      isExpired ||= cert.isExpired;
+      isEarly |= cert.isEarly;
+      isExpired |= cert.isExpired;
       if (cert.isAlmostExpired) {
         minTimeLeft = Math.min(minTimeLeft, cert.timeLeft);
       }
